@@ -32,7 +32,7 @@ jobs:
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       ENABLE_NOTIFICATIONS: "1"
 
-      # Google Sheets (required for ingest in CI) - using repository variables
+      # Google Sheets (required for ingest in CI)
       GOOGLE_SHEETS_SPREADSHEET_ID: ${{ vars.GOOGLE_SHEETS_SPREADSHEET_ID }}
       GOOGLE_SHEETS_WORKSHEET_NAME: ${{ vars.GOOGLE_SHEETS_WORKSHEET_NAME }}
       GOOGLE_SHEETS_RANGE: ${{ vars.GOOGLE_SHEETS_RANGE }}
@@ -59,24 +59,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
 
-      # Guard rails: fail early if vars are missing (no secret leakage)
-      - name: Validate required Google vars exist
-        shell: bash
+      - name: Install postgres driver
         run: |
-          set -euo pipefail
-          : "${GOOGLE_SHEETS_SPREADSHEET_ID:?Missing var GOOGLE_SHEETS_SPREADSHEET_ID}"
-          : "${GOOGLE_SHEETS_WORKSHEET_NAME:?Missing var GOOGLE_SHEETS_WORKSHEET_NAME}"
-          : "${GOOGLE_SHEETS_RANGE:?Missing var GOOGLE_SHEETS_RANGE}"
-          echo "Google vars present ✅"
-
-      - name: Debug Google env (presence)
-        shell: bash
-        run: |
-          echo "ID set?        ${GOOGLE_SHEETS_SPREADSHEET_ID:+YES}${GOOGLE_SHEETS_SPREADSHEET_ID:-NO}"
-          echo "Worksheet set? ${GOOGLE_SHEETS_WORKSHEET_NAME:+YES}${GOOGLE_SHEETS_WORKSHEET_NAME:-NO}"
-          echo "Range set?     ${GOOGLE_SHEETS_RANGE:+YES}${GOOGLE_SHEETS_RANGE:-NO}"
-          echo "Worksheet name: ${GOOGLE_SHEETS_WORKSHEET_NAME}"
-          echo "Range:          ${GOOGLE_SHEETS_RANGE}"
+          pip install "psycopg[binary]>=3.1"
 
       - name: Write Google service account key
         env:
@@ -99,14 +84,12 @@ jobs:
           bash orchestration/gha/run_all.sh
 
       - name: Upload alert report
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: alert-report
           path: data/alert_report.txt
 
       - name: Upload dbt artifacts
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dbt-artifacts
