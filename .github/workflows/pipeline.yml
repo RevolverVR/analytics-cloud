@@ -33,9 +33,9 @@ jobs:
       ENABLE_NOTIFICATIONS: "1"
 
       # Google Sheets (required for ingest in CI)
-      GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
-      GOOGLE_SHEETS_WORKSHEET_NAME: ${{ secrets.GOOGLE_SHEETS_WORKSHEET_NAME }}
-      GOOGLE_SHEETS_RANGE: ${{ secrets.GOOGLE_SHEETS_RANGE }}
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${{ vars.GOOGLE_SHEETS_SPREADSHEET_ID }}
+      GOOGLE_SHEETS_WORKSHEET_NAME: ${{ vars.GOOGLE_SHEETS_WORKSHEET_NAME }}
+      GOOGLE_SHEETS_RANGE: ${{ vars.GOOGLE_SHEETS_RANGE }}
 
       # Postgres connection for loader (expected by our code)
       PGHOST: 127.0.0.1
