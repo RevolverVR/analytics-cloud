@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: mart_ticket_metrics
+    description: "Métricas por ticket para dashboard (SLA/FCR/first response)."
+    columns:
+      - name: request_id
+        tests:
+          - not_null
+
+      - name: priority
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["Alto", "Medio", "Bajo", "Normal", "Not Assigned"]

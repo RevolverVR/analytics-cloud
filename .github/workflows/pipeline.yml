@@ -1,0 +1,91 @@
+name: analytics-cloud-pipeline
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "15 6 * * *"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: analytics
+          POSTGRES_PASSWORD: analytics
+          POSTGRES_DB: analytics
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U analytics -d analytics"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      # optional future integrations
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+
+      # Google Sheets (required for ingest in CI)
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+      GOOGLE_SHEETS_WORKSHEET_NAME: ${{ secrets.GOOGLE_SHEETS_WORKSHEET_NAME }}
+      GOOGLE_SHEETS_RANGE: ${{ secrets.GOOGLE_SHEETS_RANGE }}
+
+      # Postgres connection for loader (expected by our code)
+      PGHOST: 127.0.0.1
+      PGPORT: "5432"
+      PGDATABASE: analytics
+      PGUSER: analytics
+      PGPASSWORD: analytics
+
+      # Where our compute writes
+      ALERT_REPORT_PATH: data/alert_report.txt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Write Google service account key
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p secrets
+          python - << 'PY'
+          import os, pathlib
+          p = pathlib.Path("secrets/google_service_account.json")
+          s = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+          if not s.strip():
+              raise SystemExit("Missing secret: GOOGLE_SERVICE_ACCOUNT_JSON")
+          p.write_text(s, encoding="utf-8")
+          print(f"Wrote {p} ({p.stat().st_size} bytes)")
+          PY
+          echo "GOOGLE_APPLICATION_CREDENTIALS=secrets/google_service_account.json" >> $GITHUB_ENV
+
+      - name: Run end-to-end
+        run: |
+          bash orchestration/gha/run_all.sh
+
+      - name: Upload alert report
+        uses: actions/upload-artifact@v4
+        with:
+          name: alert-report
+          path: data/alert_report.txt
+
+      - name: Upload dbt artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-artifacts
+          path: |
+            dbt/analytics_dbt/target/
+            dbt/analytics_dbt/logs/

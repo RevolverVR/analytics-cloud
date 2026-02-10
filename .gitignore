@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Data / dumps / databases
+data/
+*.duckdb
+*.duckdb.wal
+*.xlsx
+*.csv
+*.parquet
+
+# dbt artifacts & local config
+dbt/**/target/
+dbt/**/logs/
+dbt/**/profiles.yml
+dbt/**/.user.yml
+
+# Metabase state/binaries
+**/metabase.db.*
+**/sample-database.*
+**/*.jar
+**/plugins/*.jar
+
+# OS
+.DS_Store
+
+# Logs
+logs/
+
+# Secrets
+secrets/
+*.json

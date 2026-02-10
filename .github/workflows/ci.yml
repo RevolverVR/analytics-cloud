@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: dbt compile (fast)
+        run: |
+          cp dbt/analytics_dbt/profiles.yml.example dbt/analytics_dbt/profiles.yml
+          dbt deps --project-dir dbt/analytics_dbt --profiles-dir dbt/analytics_dbt
+          dbt compile --project-dir dbt/analytics_dbt --profiles-dir dbt/analytics_dbt
