@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -21,6 +22,16 @@ jobs:
 
       - name: dbt compile (fast)
         run: |
-          cp dbt/analytics_dbt/profiles.yml.example dbt/analytics_dbt/profiles.yml
+          mkdir -p data
+          cat > dbt/analytics_dbt/profiles.yml << PROFILES
+          analytics_dbt:
+            target: dev
+            outputs:
+              dev:
+                type: duckdb
+                path: "${GITHUB_WORKSPACE}/data/dev.duckdb"
+                threads: 4
+          PROFILES
+
           dbt deps --project-dir dbt/analytics_dbt --profiles-dir dbt/analytics_dbt
           dbt compile --project-dir dbt/analytics_dbt --profiles-dir dbt/analytics_dbt
