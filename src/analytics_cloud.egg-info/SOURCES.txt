@@ -5,7 +5,11 @@ src/analytics_cloud.egg-info/SOURCES.txt
 src/analytics_cloud.egg-info/dependency_links.txt
 src/analytics_cloud.egg-info/requires.txt
 src/analytics_cloud.egg-info/top_level.txt
+src/analytics_cloud/dashboard/__init__.py
+src/analytics_cloud/dashboard/export.py
+src/analytics_cloud/dashboard/load_postgres.py
 src/analytics_cloud/ingest/__init__.py
+src/analytics_cloud/ingest/load_to_duckdb.py
 src/analytics_cloud/ingest/read_sheet.py
 src/analytics_cloud/ingest/run.py
 src/analytics_cloud/sla/__init__.py

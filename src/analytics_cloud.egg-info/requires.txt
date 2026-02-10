@@ -1,6 +1,8 @@
 duckdb>=1.0.0
 pandas>=2.0.0
 python-dotenv>=1.0.0
+gspread>=6.0.0
+google-auth>=2.0.0
 requests>=2.31.0
 dbt-core>=1.8.0
 dbt-duckdb>=1.8.0
