@@ -28,6 +28,8 @@ jobs:
       # optional future integrations
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+
+      # Telegram (required for alerts)
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       ENABLE_NOTIFICATIONS: "1"
@@ -78,6 +80,30 @@ jobs:
           print(f"Wrote {p} ({p.stat().st_size} bytes)")
           PY
           echo "GOOGLE_APPLICATION_CREDENTIALS=secrets/google_service_account.json" >> $GITHUB_ENV
+
+      - name: Validate TELEGRAM_CHAT_ID exact match
+        shell: bash
+        env:
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+          expected='-1003708846389'
+
+          if [[ "${TELEGRAM_CHAT_ID}" != "${expected}" ]]; then
+            echo "::error::TELEGRAM_CHAT_ID mismatch. Must be exactly ${expected} (no spaces, no quotes, no @username)."
+            python - <<'PY'
+          import os, re
+          v = os.environ.get("TELEGRAM_CHAT_ID","")
+          print(f"debug: len={len(v)}")
+          print(f"debug: has_space={bool(re.search(r'\\s', v))}")
+          print(f"debug: has_quote={('\"' in v) or (\"'\" in v)}")
+          print(f"debug: starts_with_minus={v.startswith('-')}")
+          print(f"debug: digits_only_after_minus={v[1:].isdigit() if v.startswith('-') else v.isdigit()}")
+          PY
+            exit 1
+          fi
+
+          echo "TELEGRAM_CHAT_ID OK (exact match)."
 
       - name: Run end-to-end
         run: |
